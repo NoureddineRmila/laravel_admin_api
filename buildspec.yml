@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      php: 7.3
+  pre_build: # commands to be run before build
+    commands:
+    - echo Logging in to Amazon ECR....
+    - aws --version
+    # login to Elastic container registry
+    - eval $(aws ecr get-login --region us-east-1 --no-include-email | sed 's|https://||')
+    - REPOSITORY_URI=<YOUR ECR REPOSITORY URI HERE>
+    - IMAGE_TAG=<YOUR IMAGE TAG HERE>
+  build:
+    commands:
+    - echo Build started on `date`
+    - echo installing composer..
+    - composer install
+    - echo creating .env file..
+    - cp .env.example .env
+    - echo generating app key
+    - php artisan key:generate
+    - echo Building the Docker image...
+    - docker build -t $REPOSITORY_URI:latest .
+    - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker image ls -a
+      - docker push $REPOSITORY_URI:$IMAGE_TAG 
