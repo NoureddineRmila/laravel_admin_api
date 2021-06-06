@@ -26,11 +26,21 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - '80:80'
+      - '8000:80'
       - '443:443'
     volumes:
       - './:/var/www'
       - './nginx/conf.d/:/etc/nginx/conf.d/'
+    networks:
+      - app-network
+  frontend:
+    image: 'rmilaweb/admin_vue'
+    container_name: frontend
+    restart: unless-stopped
+    tty: true
+    restart: always
+    ports:
+      - '8090:80'
     networks:
       - app-network
   db:
@@ -50,12 +60,20 @@ services:
       - './mysql/my.cnf:/etc/mysql/my.cnf'
     networks:
       - app-network
-  4f37656df39c:
-    image: 'sha256:4f37656df39c8d5a749d5ebf63e1cb1e7968985fb7c10edcbae6cc7802da6389'
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin'
+    container_name: pma
+    restart: unless-stopped
+    tty: true
     ports:
-      - '8080'
-    volumes:
-      - 'D:\dockerVolume\jinkins:/var/run/docker.sock '
+      - '8081:80'
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    networks:
+      - app-network
 networks:
   app-network:
     driver: bridge
